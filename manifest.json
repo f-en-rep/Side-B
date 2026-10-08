@@ -1,0 +1,14 @@
+{
+  "kind": "marinara.personal-extension",
+  "version": 1,
+  "config": {
+    "name": "이면 · SIDE B",
+    "version": "1.5.0",
+    "description": "같은 인물의 다른 면. RP 분석, 독립 외전, 반응형 HTML 결과. 참고 채팅을 읽고 기존 AI 연결로 생성하며 독립 UI와 폴더·태그·검색이 가능한 브라우저 보관함을 제공합니다.",
+    "runtime": "client",
+    "capabilities": [
+      "full_page_access"
+    ],
+    "jsPath": "extension.js"
+  }
+}
