@@ -3,8 +3,8 @@
   "version": 1,
   "config": {
     "name": "이면 · SIDE B",
-    "version": "1.5.0",
-    "description": "같은 인물의 다른 면. RP 분석, 독립 외전, 반응형 HTML 결과. 참고 채팅을 읽고 기존 AI 연결로 생성하며 독립 UI와 폴더·태그·검색이 가능한 브라우저 보관함을 제공합니다.",
+    "version": "1.7.0",
+    "description": "기존 이면·내면·번역·PNG·보관함 기능과 다면 핵심정보 추출 및 AU 생성. 핵심정보 재사용·버전 이름 변경·원본 기반 재구성을 지원합니다.",
     "runtime": "client",
     "capabilities": [
       "full_page_access"
