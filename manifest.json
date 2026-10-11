@@ -3,7 +3,7 @@
   "version": 1,
   "config": {
     "name": "이면 · SIDE B",
-    "version": "1.7.2",
+    "version": "1.8.0",
     "description": "이면 · SIDE B: 분석·스토리·HTML·내면·번역·보관함과 다면 핵심정보 추출/AU 생성. AU 프로필 상세도, 추출본 재사용·이름 변경, 원본 채팅 기반 관계 재구성을 지원합니다.",
     "runtime": "client",
     "capabilities": [
