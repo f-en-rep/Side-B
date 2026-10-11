@@ -1517,6 +1517,12 @@ function facetResolvedOptions(previous){
   if(!options.personaIds?.length||options.referenceSource==='native')options.personaIds=active?.personaCharacterId?['character:'+active.personaCharacterId]:active?.personaId?['persona:'+active.personaId]:options.personaIds||[];
   options.referenceSource='selected';
  }
+ // Keep the linked counterpart available when an AU explicitly includes a relationship,
+ // even when only one person's profile is the output target.
+ if(SideFacet.clean(options.facet).relation!=='none'){
+  if(!options.personaIds?.length)options.personaIds=active?.personaCharacterId?['character:'+active.personaCharacterId]:active?.personaId?['persona:'+active.personaId]:[];
+  if(!options.characterIds?.length&&active?.characterIds?.length)options.characterIds=[...active.characterIds];
+ }
  return options;
 }
 async function generateFacet(action='new'){
