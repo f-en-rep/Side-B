@@ -725,8 +725,11 @@ const SidePreset=(()=>{
    includeTrackers:true
   };
  }
+ function hasNativePersona(preview){
+  return Array.isArray(preview?.prompt?.messages)&&preview.prompt.messages.some(m=>m?.role==='system'&&typeof m.content==='string'&&/(?:<persona(?:\s[^>]*)?>|^##\s*persona\b|^Name:\s*\S)/im.test(m.content));
+ }
  function compose(preview,taskMessages,maxTokens,inputMaxTokens=Infinity){
- const source=preview?.prompt?.messages;if(!Array.isArray(source)||!source.length)throw new Error('마리나라가 조립된 프리셋 메시지를 반환하지 않았어요.');
+ const source=preview?.prompt?.messages;if(!Array.isArray(source))throw new Error('마리나라가 조립된 프리셋 메시지를 반환하지 않았어요.');
  const sourceMessages=source.map(m=>{if(!m||!['system','user','assistant'].includes(m.role)||typeof m.content!=='string')throw new Error('지원하지 않는 프리셋 메시지 형식이에요.');const out={role:m.role,content:m.content};for(const k of ['images','files','providerMetadata'])if(m[k]!==undefined)out[k]=m[k];return out;});
  // Preserve the host preset unchanged; append the complete Side-B prompt as one USER input.
  const finalMessage={role:'user',content:taskMessages.map(m=>m.content).filter(Boolean).join('\n\n')};
@@ -739,7 +742,7 @@ const SidePreset=(()=>{
  for(const [k,[lo,hi]] of Object.entries(ranges)){const v=input[k];if(typeof v==='number'&&Number.isFinite(v)&&v>=lo&&v<=hi&&(!['topK','maxContext'].includes(k)||Number.isInteger(v)))parameters[k]=v;}
  for(const [k,allowed] of Object.entries({reasoningEffort:[null,'low','medium','high','xhigh','maximum'],verbosity:[null,'low','medium','high'],serviceTier:[null,'flex','priority']}))if(allowed.includes(input[k]))parameters[k]=input[k];
  if(input.customParameters&&typeof input.customParameters==='object'&&!Array.isArray(input.customParameters))parameters.customParameters=structuredClone(input.customParameters);if(input.enabledParameters&&typeof input.enabledParameters==='object')parameters.enabledParameters=Object.fromEntries(Object.entries(input.enabledParameters).filter(([,v])=>typeof v==='boolean'));if(input.suppressModelParameters)parameters.enabledParameters={...parameters.enabledParameters,...Object.fromEntries(['temperature','topP','topK','minP','frequencyPenalty','presencePenalty','reasoningEffort','verbosity'].map(k=>[k,false]))};if(input.reasoningEffort==='none')parameters.reasoningEffort=null;parameters.maxTokens=maxTokens;if(parameters.enabledParameters)parameters.enabledParameters.maxTokens=true;return {messages,parameters,trimmedHistory,inputTokens:SideExtras.inputTokens(messages)};
- }return {compose,nativePromptParts};
+ }return {compose,nativePromptParts,hasNativePersona};
 })();
 if(typeof module!=='undefined')module.exports=SidePreset;
 
@@ -1428,7 +1431,8 @@ async function collect(options,target,signal){if(!target&&!options.manualSummary
  if(options.presetId&&options.presetId!=='__chat')payload.presetId=options.presetId;
  if(!options.presetId){payload.skipPreset=true;payload.promptParts=SidePreset.nativePromptParts(options,chat);}
  const response=await api('/generate/dryRun',payload,signal);const preview=await response.json();
- if(!preview?.prompt?.messages)throw new Error('서버가 프리셋 미리보기를 지원하지 않거나 잘못된 응답을 반환했어요.');
+ if(!Array.isArray(preview?.prompt?.messages))throw new Error('서버가 프리셋 미리보기를 지원하지 않거나 잘못된 응답을 반환했어요.');
+ if(!options.presetId&&(chat.personaId||chat.personaCharacterId)&&!SidePreset.hasNativePersona(preview))throw new Error('마리나라가 연결된 페르소나를 프롬프트에 포함하지 못했어요. promptParts를 지원하는 버전인지 확인하거나 참고 자료를 직접 선택해 주세요.');
  const connection=connections.find(c=>c.id===cid),meta=H.parseObject(chat.metadata);
  const candidates=options.presetId?[options.presetId!=='__chat'?options.presetId:'',chat.mode==='roleplay'?connection?.promptPresetId:'',chat.promptPresetId].filter(Boolean):[];
  const selectedPreset=candidates.map(id=>presets.find(p=>p.id===id)).find(Boolean);
