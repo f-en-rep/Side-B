@@ -1,13 +1,3 @@
-async function collectLore(options,chat,signal){
- const overrides=H.parseObject(H.parseObject(chat.metadata).entryStateOverrides);
- return Promise.all(options.loreIds.map(async lid=>{
-   const entries=await get('/lorebooks/'+encodeURIComponent(lid)+'/entries',signal);
-   return {name:lorebooks.find(l=>l.id===lid)?.name||lid,entries:entries
-    .filter(e=>options.loreEntries[lid]?options.loreEntries[lid].includes(e.id):(overrides[e.id]?.enabled??H.truth(e.enabled)))
-    .filter(e=>typeof options.loreScan!=='string'||C.loreActive(e,options.loreScan))
-    .map(e=>({name:e.comment||e.name||'',content:e.content}))};
-  }));
-}
 /* Generation orchestration shared by every work mode. */
 function checkTask(target,signal){
  if(!alive||signal?.aborted||target!==chatId)throw new DOMException('중단됨','AbortError');
@@ -107,7 +97,6 @@ async function generate(action='new'){
 async function performGeneration(action='new',signal){
  if(busy)return;
  if(action==='facet-approve'){const source=current;await saveFacetIdentity();if(current?.id!==source?.id)return;}
- if(chatId!==activeChat()){say('참고 채팅을 다시 선택해 주세요.',true);return;}
  const extract=action==='facet-extract',target=chatId,previous=action==='new'||extract?null:current;
  if(action!=='new'&&!extract&&!previous)return;
  const viewIdAtStart=current?.id||null,viewEpochAtStart=viewEpoch,before=current;
