@@ -1,4 +1,4 @@
-:host{all:initial;position:fixed!important;margin:0;padding:0;border:0;background:transparent;overflow:visible;z-index:2147482000}
+:host{all:initial;position:fixed!important;inset:0 auto auto 0;margin:0;padding:0;border:0;background:transparent;overflow:visible;z-index:2147482000}
 :host([hidden]){display:none!important}
 .app{--paper:var(--surface);--soft:var(--accent-soft);--tint:var(--accent-soft);--bg:var(--ground);--shadow:#16171a24;--radius:14px;-webkit-text-size-adjust:100%;color-scheme:light;height:100%}
 .app[data-theme=dark]{--danger:#f2788e;--shadow:#0009;color-scheme:dark}
@@ -850,3 +850,11 @@ select{height:36px}
 
 /* Marinara-specific controls and the existing RP export panel. */
 .reference-scope{margin:0;padding:0;border:0;min-width:0}.reference-scope:disabled .seg,.reference-scope:disabled input{opacity:.5}.pick-list{max-height:260px;overflow:auto}.feature-body .field select{margin-top:6px}
+
+/* Reference chat switcher: the header block, the composer note and the chat sheet. */
+button.who{border:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;padding:6px 8px;margin-left:-8px;border-radius:10px}
+.chat-switch{display:inline-flex;align-items:center;gap:3px;min-width:0;border:0;background:transparent;font:inherit;color:inherit;cursor:pointer;padding:4px 6px;border-radius:8px}
+.chat-switch>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+button.who>.side-icon,.chat-switch>.side-icon{flex:none;width:14px;height:14px;color:var(--faint)}
+button.who:hover,.chat-switch:hover{background:var(--wash)}
+.chat-list{margin-top:10px}
