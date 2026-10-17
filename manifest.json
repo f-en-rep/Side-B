@@ -3,7 +3,7 @@
   "version": 1,
   "config": {
     "name": "이면 · SIDE B",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "description": "이면 · SIDE B: Side Story 0.15.9 기반 UI, 시리즈 이어쓰기, 번역 복구, 인물 추출 및 AU 생성. 마리나라 전용 연결·프리셋·보관함 지원.",
     "runtime": "client",
     "capabilities": [
