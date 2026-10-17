@@ -1,11 +1,12 @@
 let rpDraft=null;
+function withTimeout(promise,ms,message){let timer;return Promise.race([promise,new Promise((_,reject)=>{timer=appHost.setTimeout(()=>reject(Error(message)),ms);})]).finally(()=>appHost.clearTimeout(timer));}
 async function openResultChat(){
  if(busy||!current)return;
  const record=current;
  rpDraft={recordId:record.id,name:(record.title||'새 이야기').slice(0,160),characterIds:[...(record.rpSource?.characterIds||record.characterIds||record.settings?.characterIds||[])],persona:'',connectionId:record.rpSource?.connectionId||record.settings?.connectionId||'',presetId:record.rpSource?.promptPresetId||'',loading:true,working:false,error:'',link:record.rpChatLink||null};
  if(rpDraft.link){for(const k of ['characterIds','persona','connectionId','presetId'])if(rpDraft.link[k]!==undefined)rpDraft[k]=structuredClone(rpDraft.link[k]);rpDraft.loading=false;openFeature('newchat');return;}const draft=rpDraft;openFeature('newchat');
  try{
-  const source=record.rpSource|| (record.chatId?await bounded(get('/chats/'+encodeURIComponent(record.chatId)),5000,'원본 채팅 불러오기 지연'):{});
+  const source=record.rpSource|| (record.chatId?await withTimeout(get('/chats/'+encodeURIComponent(record.chatId)),5000,'원본 채팅 불러오기 지연'):{});
   if(rpDraft!==draft||featurePanel!=='newchat')return;
   if(!draft.characterIds.length)draft.characterIds=[...(source.characterIds||[])];
   const selected=record.settings?.referenceSource==='native'?[]:record.settings?.personaIds||[];
