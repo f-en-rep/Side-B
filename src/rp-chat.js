@@ -19,7 +19,7 @@ async function openResultChat(fromStart=false){
 }
 function resultChatPanel(){
  const d=rpDraft;if(!d)return '';
- const record=records.find(r=>r.id===d.recordId)||current,ready=d.link?.messageId,many=d.partIds.length>1,what=many?`1편부터 ${d.partIds.length}편까지 원문을 메시지로 하나씩`:'원문을 첫 메시지로';
+ const record=records.find(r=>r.id===d.recordId)||current,ready=d.link?.messageId,many=d.partIds.length>1,what=many?`1편부터 ${d.partIds.length}편까지 아티클을 메시지로 하나씩`:'아티클을 첫 메시지로';
  if(ready)return featureShell('새 RP방',`<p class="rp-success">${E(d.link.name)}에 ${what} 저장했어요.</p><p class="hint">새 방 열기를 누르면 화면을 새로고침해서 해당 방으로 이동해요.</p>`,`<button id="feature-close-bottom">닫기</button><button id="rp-open" class="primary">새 방 열기</button>`);
  const frozen=d.working||d.loading||!!d.link;
  const options=[['','선택 안 함'],...personas.map(p=>['persona:'+p.id,p.name||H.character(p).name]),...characters.map(c=>['character:'+c.id,'캐릭터로 참여 · '+H.character(c).name])];
@@ -32,7 +32,7 @@ async function createResultChat(){
  if(!d.link){
   d.name=($('rp-name')?.value||'').trim().slice(0,160);d.characterIds=[...root.querySelectorAll('[data-rp-character]:checked')].map(el=>el.dataset.rpCharacter);d.persona=$('rp-persona')?.value||'';d.connectionId=$('rp-connection')?.value||'';d.presetId=$('rp-preset')?.value||'';
   if(!d.name||!d.characterIds.length){d.error='방 이름과 등장 캐릭터를 선택해 주세요.';paintFeature();return;}
-  if(partRecords(d).some(r=>!r?.content?.trim())){d.error='새 방에 넣을 원문이 없어요.';paintFeature();return;}
+  if(partRecords(d).some(r=>!r?.content?.trim())){d.error='새 방에 넣을 아티클이 없어요.';paintFeature();return;}
  }
  d.working=true;d.error='';busy=true;paintFeature();
  const persistLink=async()=>{const latest=records.find(r=>r.id===record.id)||record;const next={...latest,rpChatLink:structuredClone(d.link)};await save(next);if(current?.id===next.id)current=next;};
@@ -52,10 +52,27 @@ async function createResultChat(){
    if(!message?.id)throw Error('메시지 저장을 확인하지 못했어요.');
   }
   d.link.messageId=message.id;await persistLink();
-  say(d.partIds.length>1?`새 RP방에 1편부터 ${d.partIds.length}편까지 원문을 저장했어요.`:'새 RP방에 원문을 저장했어요.');
+  say(d.partIds.length>1?`새 RP방에 1편부터 ${d.partIds.length}편까지 아티클을 저장했어요.`:'새 RP방에 아티클을 저장했어요.');
  }catch(e){d.error=e.message+' · 다시 시도하면 저장된 방부터 확인해요.';}
  finally{d.working=false;busy=false;if(alive&&rpDraft===d&&featurePanel==='newchat')paintFeature();}
 }
 function partRecords(d){return (d.partIds?.length?d.partIds:[d.recordId]).map(id=>records.find(r=>r.id===id));}
+/** Appends one part, or parts 1..current, to the chat open in Marinara as character messages. */
+async function appendResultToChat(fromStart=false){
+ if(busy||!current)return;const record=current,parts=fromStart?partsUpTo(record):[record],open=appHost.currentChatId();
+ if(!open||record.chatId!==open)throw Error('이 아티클을 만든 채팅을 마리나라에서 열어 둔 상태에서 추가할 수 있어요.');
+ if(parts.some(r=>!r?.content?.trim()))throw Error('채팅에 넣을 아티클이 없어요.');
+ if(!await askConfirm('현재 채팅에 추가',`${parts.length>1?`1편부터 ${parts.length}편까지 `:''}아티클 ${parts.length}개를 캐릭터 메시지로 지금 채팅 맨 끝에 붙여요. 일반 메시지라 이후 대화에서 AI가 기억해요.`))return;
+ busy=true;render();
+ try{
+  const chat=await get('/chats/'+encodeURIComponent(open)),members=H.parseArray(chat?.characterIds),speaker=members.find(id=>H.parseArray(record.characterIds).includes(id))||(members.length===1?members[0]:null);
+  // Parts already appended by an earlier attempt are not sent twice.
+  const saved=new Set((await get('/chats/'+encodeURIComponent(open)+'/messages')).map(m=>H.parseObject(m.extra).sideBRecordId).filter(Boolean));let n=0;
+  for(const part of parts){if(saved.has(part.id))continue;const message=await (await api('/chats/'+encodeURIComponent(open)+'/messages',{role:'assistant',characterId:speaker,content:part.content,extra:{sideBRecordId:part.id}})).json();if(!message?.id)throw Error('메시지 저장을 확인하지 못했어요.');n++;}
+  say(n?`채팅에 메시지 ${n}개를 추가했어요.`:'이미 채팅에 들어 있는 아티클이에요.');
+  // Marinara does not refresh an open chat for messages added through the API.
+  if(n&&await askConfirm('채팅 새로고침',`추가한 메시지는 새로고침하면 채팅에 보여요. 지금 새로고침할까요?`)){flushSettings();await saveQueue;window.location.reload();}
+ }finally{busy=false;if(alive)render();}
+}
 async function openCreatedChat(){if(!rpDraft?.link?.messageId)return;flushSettings();await saveQueue;localStorage.setItem('marinara-active-chat-id',rpDraft.link.chatId);window.location.reload();}
 
